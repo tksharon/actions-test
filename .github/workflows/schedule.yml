@@ -1,0 +1,32 @@
+name: Scheduled time writer
+
+on:
+  schedule:
+    # Runs at 20:00 JST (11:00 UTC)
+    - cron: "0 11 * * *"
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+permissions:
+  contents: write # Required to push changes to the repository
+
+jobs:
+  write-time:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Write current time
+        run: python write_time.py
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add outtime.txt
+          git diff --staged --quiet || git commit -m "Update outtime.txt [skip ci]"
+          git push
